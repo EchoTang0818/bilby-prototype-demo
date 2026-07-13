@@ -1,0 +1,689 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Bilby — Clickable Prototype v0.2</title>
+<style>
+  :root{
+    --cream:#F7F2EC; --ink:#1D2B2B; --muted:#6C7B7B;
+    --teal:#1F6F63; --teal-l:#D7EAE5;
+    --amber:#E8A33D; --amber-l:#FBEDD8;
+    --coral:#E4664F; --coral-l:#FBE0DA;
+    --card:#FFF; --line:#E6DDD3; --shadow:0 6px 24px rgba(29,43,43,.08);
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Inter,system-ui,sans-serif;
+       background:var(--cream);color:var(--ink);padding:28px 20px 60px;-webkit-font-smoothing:antialiased}
+  .wrap{max-width:1180px;margin:0 auto}
+  h1{font-size:30px;letter-spacing:-.5px}
+  h1 span{color:var(--teal)}
+  .sub{color:var(--muted);font-size:14px;margin-top:6px;max-width:680px;line-height:1.55}
+  .pill{display:inline-block;background:var(--teal-l);color:var(--teal);font-size:11px;font-weight:700;
+        padding:5px 10px;border-radius:99px;letter-spacing:.4px}
+  .newpill{background:var(--coral-l);color:var(--coral)}
+  .toolbar{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin:22px 0 18px}
+  .btn{border:1px solid var(--line);background:#fff;color:var(--ink);font-size:13px;font-weight:600;
+       padding:9px 14px;border-radius:10px;cursor:pointer;transition:.15s}
+  .btn:hover{border-color:var(--teal);color:var(--teal)}
+  .btn.on{background:var(--teal);border-color:var(--teal);color:#fff}
+  .stage{display:grid;grid-template-columns:1fr 1fr;gap:26px;align-items:start}
+  @media(max-width:900px){.stage{grid-template-columns:1fr}}
+  .panel{background:#fff;border:1px solid var(--line);border-radius:20px;padding:18px;box-shadow:var(--shadow)}
+  .panel h2{font-size:13px;text-transform:uppercase;letter-spacing:1px;color:var(--muted)}
+  .panel .who{font-size:12px;color:var(--muted);margin:2px 0 14px}
+
+  .phone{width:340px;margin:0 auto;background:#fff;border:10px solid #23302F;border-radius:38px;
+         height:680px;overflow:hidden;position:relative;display:flex;flex-direction:column}
+  .notch{height:26px;background:#23302F;border-radius:0 0 14px 14px;width:120px;margin:0 auto;position:absolute;left:0;right:0;top:0;z-index:5}
+  .screen{flex:1;overflow-y:auto;padding:38px 16px 74px;position:relative}
+  .screen::-webkit-scrollbar{width:0}
+  .tabbar{position:absolute;bottom:0;left:0;right:0;height:60px;background:#fff;border-top:1px solid var(--line);display:flex;z-index:4}
+  .tabbar.hide{display:none}
+  .tabbar button{flex:1;border:0;background:none;font-size:10px;font-weight:700;color:#B4BEBE;cursor:pointer;
+          display:flex;flex-direction:column;align-items:center;gap:3px;padding-top:9px}
+  .tabbar button .ic{font-size:17px}
+  .tabbar button.on{color:var(--teal)}
+  .kidbg{background:linear-gradient(180deg,#EAF4F1 0%,#FBF6EF 55%)}
+  .lowstim .kidbg{background:#FBF9F6}
+  .lowstim .bounce{animation:none}
+  .bounce{animation:bob 2.6s ease-in-out infinite}
+  @keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-5px)}}
+
+  .h-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
+  .hi{font-size:18px;font-weight:800}
+  .coins{background:var(--amber-l);color:#96631A;font-weight:800;font-size:13px;padding:6px 11px;border-radius:99px}
+  .petcard{background:#fff;border-radius:22px;padding:14px;text-align:center;box-shadow:0 4px 16px rgba(29,43,43,.06);margin-bottom:14px}
+  .petname{font-weight:800;font-size:15px}
+  .petstage{font-size:11px;color:var(--muted);margin-bottom:6px}
+  .xpwrap{background:#EFE9E1;border-radius:99px;height:10px;overflow:hidden;margin-top:4px}
+  .xpbar{height:100%;background:var(--teal);border-radius:99px;transition:width .5s}
+  .xplabel{font-size:10px;color:var(--muted);margin-top:5px;display:flex;justify-content:space-between}
+  .sect{font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.8px;color:var(--muted);margin:14px 2px 8px}
+
+  .task{background:#fff;border:1px solid var(--line);border-radius:16px;padding:12px;display:flex;gap:11px;align-items:center;margin-bottom:9px;cursor:pointer;transition:.15s}
+  .task:hover{border-color:var(--teal);transform:translateY(-1px)}
+  .task .ic{width:38px;height:38px;border-radius:12px;display:grid;place-items:center;font-size:18px;background:var(--teal-l);flex:none}
+  .task .t{flex:1}.task .t b{font-size:14px;display:block}.task .t small{color:var(--muted);font-size:11px}
+  .task .pts{font-size:12px;font-weight:800;color:var(--amber)}
+  .task.pending{opacity:.75;border-style:dashed}.task.done{opacity:.55}
+  .badge{font-size:9px;font-weight:800;padding:3px 7px;border-radius:99px;text-transform:uppercase;letter-spacing:.5px}
+  .b-wait{background:var(--amber-l);color:#96631A}.b-done{background:var(--teal-l);color:var(--teal)}
+
+  .runner{text-align:center}
+  .back{font-size:12px;color:var(--muted);cursor:pointer;margin-bottom:10px;display:inline-block}
+  .steps{display:flex;gap:5px;justify-content:center;margin:8px 0 14px}
+  .dot{width:8px;height:8px;border-radius:99px;background:#DDD5CC}.dot.on{background:var(--teal);width:22px}
+  .stepcard{background:#fff;border-radius:20px;padding:22px 16px;box-shadow:var(--shadow);margin-bottom:14px}
+  .stepimg{font-size:56px;margin-bottom:10px}
+  .steptxt{font-size:17px;font-weight:800;margin-bottom:4px}
+  .stepsub{font-size:12px;color:var(--muted)}
+  .timer{font-size:12px;color:var(--teal);font-weight:800;margin-top:10px}
+  .bigbtn{width:100%;border:0;background:var(--teal);color:#fff;font-weight:800;font-size:15px;padding:15px;border-radius:16px;cursor:pointer;margin-bottom:8px}
+  .bigbtn:disabled{opacity:.35;cursor:not-allowed}
+  .ghostbtn{width:100%;border:1px solid var(--line);background:#fff;color:var(--muted);font-weight:700;font-size:13px;padding:12px;border-radius:14px;cursor:pointer;margin-bottom:6px}
+  .helpnote{font-size:11px;color:var(--muted);margin-top:4px}
+
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+  .item{background:#fff;border:1px solid var(--line);border-radius:16px;padding:12px;text-align:center;cursor:pointer;transition:.15s}
+  .item:hover{border-color:var(--amber)}
+  .item.owned{opacity:.5;cursor:default}
+  .item .e{font-size:28px;display:block;margin-bottom:5px}
+  .item b{font-size:12px;display:block}.item small{font-size:11px;color:var(--amber);font-weight:800}
+
+  /* onboarding */
+  .ob{text-align:center;padding-top:6px}
+  .ob h3{font-size:20px;font-weight:800;margin-bottom:4px}
+  .ob p{font-size:12px;color:var(--muted);margin-bottom:14px;line-height:1.5}
+  .animals{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px}
+  .acard{background:#fff;border:2px solid var(--line);border-radius:18px;padding:8px 6px 10px;cursor:pointer;transition:.15s}
+  .acard:hover{border-color:var(--teal)}
+  .acard.sel{border-color:var(--teal);background:var(--teal-l)}
+  .acard b{font-size:13px;display:block;margin-top:2px}
+  .acard small{font-size:10px;color:var(--muted)}
+  .nameinput{width:100%;border:2px solid var(--line);border-radius:16px;padding:14px;font-size:18px;font-weight:800;
+             text-align:center;font-family:inherit;color:var(--ink);margin-bottom:10px}
+  .nameinput:focus{outline:none;border-color:var(--teal)}
+  .chips{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;margin-bottom:14px}
+  .chip{background:#fff;border:1px solid var(--line);border-radius:99px;padding:6px 11px;font-size:12px;font-weight:700;cursor:pointer}
+  .chip:hover{border-color:var(--teal);color:var(--teal)}
+
+  /* parent */
+  .pcard{background:#fff;border:1px solid var(--line);border-radius:16px;padding:14px;margin-bottom:10px}
+  .pcard h3{font-size:14px;margin-bottom:3px}
+  .pcard p{font-size:12px;color:var(--muted);line-height:1.5}
+  .kpi{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-bottom:12px}
+  .kpi div{background:#fff;border:1px solid var(--line);border-radius:14px;padding:11px}
+  .kpi b{font-size:20px;display:block;color:var(--teal)}
+  .kpi small{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px}
+  .approve{display:flex;gap:6px;margin-top:9px}
+  .approve button{flex:1;border:0;border-radius:10px;padding:9px;font-size:12px;font-weight:800;cursor:pointer}
+  .yes{background:var(--teal);color:#fff}.part{background:var(--amber-l);color:#96631A}.no{background:#F2EDE7;color:var(--muted)}
+  .empty{text-align:center;color:var(--muted);font-size:12px;padding:26px 10px;line-height:1.6}
+  .tmpl{border:1px solid var(--line);border-radius:14px;padding:11px;margin-bottom:8px;cursor:pointer;background:#fff}
+  .tmpl:hover{border-color:var(--teal)}
+  .tmpl b{font-size:13px}.tmpl small{display:block;color:var(--muted);font-size:11px;margin-top:2px}
+  .datarow{display:flex;justify-content:space-between;font-size:12px;padding:9px 0;border-bottom:1px solid var(--line)}
+  .datarow:last-child{border:0}.datarow span:last-child{font-weight:700}
+  .otbox{background:var(--teal-l);border-radius:14px;padding:12px;font-size:11px;color:var(--teal);line-height:1.6;margin-top:10px}
+
+  /* task builder */
+  .fld{margin-bottom:11px}
+  .fld label{font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.6px;color:var(--muted);display:block;margin-bottom:5px}
+  .fld input[type=text]{width:100%;border:1px solid var(--line);border-radius:11px;padding:10px;font-size:13px;font-family:inherit}
+  .fld input:focus{outline:none;border-color:var(--teal)}
+  .iconpick{display:flex;gap:5px;flex-wrap:wrap}
+  .iconpick span{width:34px;height:34px;border:1px solid var(--line);border-radius:10px;display:grid;place-items:center;font-size:16px;cursor:pointer}
+  .iconpick span.sel{border-color:var(--teal);background:var(--teal-l)}
+  .stepper{display:flex;align-items:center;gap:10px}
+  .stepper button{width:34px;height:34px;border:1px solid var(--line);background:#fff;border-radius:10px;font-size:16px;font-weight:800;cursor:pointer;color:var(--teal)}
+  .stepper b{font-size:18px;min-width:52px;text-align:center;color:var(--amber)}
+  .steprow{display:flex;gap:5px;margin-bottom:5px}
+  .steprow input{flex:1;border:1px solid var(--line);border-radius:10px;padding:8px;font-size:12px;font-family:inherit}
+  .steprow .em{width:38px;border:1px solid var(--line);border-radius:10px;text-align:center;font-size:15px;font-family:inherit}
+  .steprow .del{width:30px;border:0;background:none;color:#C9B7A6;cursor:pointer;font-size:15px}
+  .addstep{border:1px dashed var(--line);background:none;width:100%;border-radius:10px;padding:8px;font-size:12px;font-weight:700;color:var(--muted);cursor:pointer}
+  .seg{display:flex;gap:5px}
+  .seg button{flex:1;border:1px solid var(--line);background:#fff;border-radius:10px;padding:8px;font-size:11px;font-weight:700;cursor:pointer;color:var(--muted)}
+  .seg button.on{border-color:var(--teal);background:var(--teal-l);color:var(--teal)}
+  .editrow{display:flex;align-items:center;gap:8px;padding:9px 0;border-bottom:1px solid var(--line);font-size:13px}
+  .editrow b{flex:1;font-weight:600}
+  .editrow .mini{width:26px;height:26px;border:1px solid var(--line);background:#fff;border-radius:8px;cursor:pointer;font-weight:800;color:var(--teal)}
+  .editrow .v{font-weight:800;color:var(--amber);min-width:34px;text-align:center}
+  .editrow .rm{border:0;background:none;color:#C9B7A6;cursor:pointer;font-size:14px}
+
+  .toast{position:absolute;left:14px;right:14px;bottom:72px;background:#23302F;color:#fff;font-size:12px;font-weight:600;
+         padding:11px 14px;border-radius:12px;opacity:0;transform:translateY(8px);transition:.25s;z-index:6;text-align:center}
+  .toast.show{opacity:1;transform:translateY(0)}
+  .notes{margin-top:30px;background:#fff;border:1px solid var(--line);border-radius:18px;padding:20px}
+  .notes h3{font-size:15px;margin-bottom:10px}
+  .notes ol{margin-left:18px;font-size:13px;color:var(--muted);line-height:1.9}
+  .notes code{background:var(--cream);padding:2px 6px;border-radius:5px;font-size:12px;color:var(--teal)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div>
+    <span class="pill">CLICKABLE PROTOTYPE v0.2 · FOR ENGINEERING REVIEW</span>
+    <span class="pill newpill">NEW: pick your animal · name it · parent-built tasks &amp; coin values</span>
+    <h1 style="margin-top:10px">Bilby <span>— grow your buddy</span></h1>
+    <p class="sub">Real-world routines feed a virtual animal the child chooses and names.
+    Parent builds the tasks and sets the coin value. <b>The animal never gets sick, never decays, never dies.</b>
+    Every attempt writes the OT-ready data model from day one.</p>
+  </div>
+
+  <div class="toolbar">
+    <button class="btn on" id="lsBtn">🔅 Low-stimulation mode: OFF</button>
+    <button class="btn" id="resetBtn">↺ Reset demo (re-run onboarding)</button>
+    <span style="font-size:12px;color:var(--muted);margin-left:6px">Both apps are live — build a task on the right, watch it appear on the left.</span>
+  </div>
+
+  <div class="stage">
+    <div class="panel">
+      <h2>Child app</h2>
+      <div class="who">Ages 5–10 · no ads, no chat, no comparison to other kids</div>
+      <div class="phone">
+        <div class="notch"></div>
+        <div class="screen kidbg" id="kidScreen"></div>
+        <div class="tabbar" id="kidTabs">
+          <button data-t="home" class="on"><span class="ic">🏠</span>Home</button>
+          <button data-t="care"><span class="ic">🥕</span>Care</button>
+          <button data-t="shop"><span class="ic">🎒</span>Shop</button>
+          <button data-t="room"><span class="ic">🛏️</span>Den</button>
+        </div>
+        <div class="toast" id="kidToast"></div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <h2>Parent app</h2>
+      <div class="who">Build tasks · set coin values · approve · OT insights</div>
+      <div class="phone">
+        <div class="notch"></div>
+        <div class="screen" id="parScreen" style="background:#FBF9F6"></div>
+        <div class="tabbar" id="parTabs">
+          <button data-t="dash" class="on"><span class="ic">📋</span>Today</button>
+          <button data-t="approve"><span class="ic">✅</span>Approve</button>
+          <button data-t="build"><span class="ic">➕</span>Tasks</button>
+          <button data-t="insight"><span class="ic">📈</span>Insights</button>
+        </div>
+        <div class="toast" id="parToast"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="notes">
+    <h3>Demo script for the engineering walkthrough</h3>
+    <ol>
+      <li><b>Child onboarding (new):</b> pick one of 6 animals (cat, dog, bunny, dragon, bilby, quokka) → name it (free text, or tap a suggested name) → land on Home. Choice is stored on <code>pet</code>, not hard-coded.</li>
+      <li><b>Parent builds a task (new):</b> Tasks tab → <b>＋ New task</b> → title, icon, <b>coin value 1–20 (parent sets it)</b>, 1–6 visual steps, prompt level → Save. It appears instantly in the child's Home.</li>
+      <li><b>Parent re-prices anything (new):</b> Tasks tab → the ± controls next to any task change its coin value live.</li>
+      <li>Child taps a task → steps through → taps <b>🙋 I need help</b> → <b>All done</b> → task = <i>waiting</i>. <b>Zero coins awarded yet.</b></li>
+      <li>Parent → Approve → full / partly (half, rounded up) / <b>Not today</b> (awards nothing, removes nothing).</li>
+      <li>Child → Shop → buy food → Care → feed → XP → the animal grows a stage. Toggle low-stimulation mode to see the reduced variant.</li>
+    </ol>
+  </div>
+</div>
+
+<script>
+/* ================= data ================= */
+const ANIMALS = {
+  cat:    {name:'Cat',    blurb:'Curious and cosy',   names:['Mochi','Luna','Tiger','Pepper']},
+  dog:    {name:'Dog',    blurb:'Loyal and waggy',    names:['Buddy','Bailey','Rocky','Coco']},
+  bunny:  {name:'Bunny',  blurb:'Soft and hoppy',     names:['Snowy','Nibbles','Poppy','Clover']},
+  dragon: {name:'Dragon', blurb:'Tiny and brave',     names:['Ember','Zippy','Scorch','Pip']},
+  bilby:  {name:'Bilby',  blurb:'Aussie big-ears',    names:['Bandi','Milo','Nala','Wattle']},
+  quokka: {name:'Quokka', blurb:'Always smiling',     names:['Sunny','Bo','Kiki','Banjo']}
+};
+const STAGES = [
+  {n:'Joey',     min:0,   scale:.72},
+  {n:'Digger',   min:40,  scale:.86},
+  {n:'Explorer', min:90,  scale:1.0},
+  {n:'Guardian', min:160, scale:1.14}
+];
+const SHOP = [
+  {id:'carrot',e:'🥕',name:'Carrot',cost:8,type:'food',xp:6},
+  {id:'berry', e:'🫐',name:'Bush berry',cost:12,type:'food',xp:10},
+  {id:'hat',   e:'🎩',name:'Explorer hat',cost:20,type:'wear',xp:8},
+  {id:'scarf', e:'🧣',name:'Stripy scarf',cost:16,type:'wear',xp:6},
+  {id:'lamp',  e:'🪔',name:'Cosy lamp',cost:24,type:'room',xp:10},
+  {id:'plant', e:'🪴',name:'Gum sapling',cost:18,type:'room',xp:8}
+];
+const TEMPLATES = [
+  {n:'Morning routine',   s:'Wake · dress · teeth · bag · shoes', c:5},
+  {n:'Bedtime wind-down', s:'Bath · pyjamas · teeth · book · lights', c:5},
+  {n:'After school',      s:'Bag away · lunchbox out · homework', c:3},
+  {n:'Sensory break',     s:'Movement · quiet corner · drink', c:3}
+];
+const ICONS = ['🪥','🎒','👕','🍽️','🛏️','📕','🧦','🚿','🧹','🐕','🥣','🎨'];
+
+const seed = () => ({
+  onboard:'animal', species:null, petName:'',
+  coins:6, xp:22, lowStim:false, owned:[], wearing:null, room:[],
+  kidTab:'home', parTab:'dash', view:null, step:0, active:null,
+  editing:null,
+  nextId:5,
+  tasks:[
+    {id:1,icon:'🪥',title:'Brush teeth',pts:5,status:'todo',help:0,secs:0,partial:false,prompt:'partial',
+     steps:[{e:'🚰',t:'Wet your toothbrush'},{e:'🪥',t:'Small circles, top teeth'},{e:'😁',t:'Small circles, bottom teeth'},{e:'💧',t:'Rinse and put it back'}]},
+    {id:2,icon:'🎒',title:'Pack school bag',pts:6,status:'todo',help:0,secs:0,partial:false,prompt:'full',
+     steps:[{e:'📕',t:'Reader in the bag'},{e:'🍎',t:'Lunchbox in the bag'},{e:'🧢',t:'Hat in the bag'}]},
+    {id:3,icon:'👕',title:'Get dressed',pts:5,status:'todo',help:0,secs:0,partial:false,prompt:'none',
+     steps:[{e:'👕',t:'Shirt on'},{e:'🩳',t:'Shorts on'},{e:'🧦',t:'Socks and shoes'}]},
+    {id:4,icon:'🍽️',title:'Plate in the sink',pts:3,status:'todo',help:0,secs:0,partial:false,prompt:'none',
+     steps:[{e:'🍽️',t:'Carry your plate'},{e:'🚿',t:'Rinse it'}]}
+  ]
+});
+let S = seed(), tick = null;
+let draft = null; // task builder draft
+
+/* ================= art ================= */
+/* Shared chibi rig: same big head / big eyes / blush proportions for every species.
+   Only ears, tail, muzzle and palette change. This is exactly how production art should be built. */
+const PALETTE = {
+  cat:    {main:'#F2A65A', light:'#FBE7CE', inner:'#F3B9B4', nose:'#E4664F', dark:'#D98A3C'},
+  dog:    {main:'#CB9366', light:'#F6E6D3', inner:'#A9703F', nose:'#4A3B33', dark:'#A9703F'},
+  bunny:  {main:'#E7DCD2', light:'#FFFFFF', inner:'#F3C6C6', nose:'#E48A9A', dark:'#CDBFB2'},
+  dragon: {main:'#8ECBA3', light:'#DDF1E4', inner:'#6FB187', nose:'#3F6B52', dark:'#F2C14E'},
+  bilby:  {main:'#C1B0A0', light:'#EFE4D8', inner:'#F0D2CC', nose:'#8C6E63', dark:'#8C6E63'},
+  quokka: {main:'#CFA476', light:'#F2E1CA', inner:'#E8C0B4', nose:'#5E4235', dark:'#B98A5E'}
+};
+
+function petSVG(sp, scale, wearing, cls){
+  const p = PALETTE[sp] || PALETTE.cat;
+  const hat = wearing==='hat'   ? `<ellipse cx="60" cy="30" rx="24" ry="4.5" fill="#23302F"/><rect x="47" y="10" width="26" height="20" rx="4" fill="#23302F"/><rect x="47" y="24" width="26" height="5" fill="#E4664F"/>` : '';
+  const scf = wearing==='scarf' ? `<path d="M38 84 Q60 94 82 84 L82 92 Q60 102 38 92 Z" fill="#E4664F"/><rect x="63" y="92" width="9" height="15" rx="4" fill="#D2543D" transform="rotate(8 67 99)"/>` : '';
+
+  /* ---- ears (behind the head) ---- */
+  const EARS = {
+    cat: `<path d="M36 40 L34 12 L58 30 Z" fill="${p.main}"/><path d="M84 40 L86 12 L62 30 Z" fill="${p.main}"/>
+          <path d="M39 36 L38 20 L52 30 Z" fill="${p.inner}"/><path d="M81 36 L82 20 L68 30 Z" fill="${p.inner}"/>`,
+    dog: `<ellipse cx="32" cy="52" rx="10" ry="20" fill="${p.dark}" transform="rotate(-14 32 52)"/>
+          <ellipse cx="88" cy="52" rx="10" ry="20" fill="${p.dark}" transform="rotate(14 88 52)"/>`,
+    bunny:`<ellipse cx="45" cy="16" rx="8" ry="24" fill="${p.main}" transform="rotate(-10 45 16)"/>
+           <ellipse cx="75" cy="16" rx="8" ry="24" fill="${p.main}" transform="rotate(10 75 16)"/>
+           <ellipse cx="45" cy="18" rx="4" ry="16" fill="${p.inner}" transform="rotate(-10 45 18)"/>
+           <ellipse cx="75" cy="18" rx="4" ry="16" fill="${p.inner}" transform="rotate(10 75 18)"/>`,
+    dragon:`<path d="M42 30 L36 8 L54 24 Z" fill="${p.dark}"/><path d="M78 30 L84 8 L66 24 Z" fill="${p.dark}"/>
+            <ellipse cx="34" cy="36" rx="7" ry="6" fill="${p.inner}"/><ellipse cx="86" cy="36" rx="7" ry="6" fill="${p.inner}"/>`,
+    bilby:`<ellipse cx="42" cy="20" rx="8" ry="22" fill="${p.main}" transform="rotate(-16 42 20)"/>
+           <ellipse cx="78" cy="20" rx="8" ry="22" fill="${p.main}" transform="rotate(16 78 20)"/>
+           <ellipse cx="42" cy="22" rx="4" ry="14" fill="${p.inner}" transform="rotate(-16 42 22)"/>
+           <ellipse cx="78" cy="22" rx="4" ry="14" fill="${p.inner}" transform="rotate(16 78 22)"/>`,
+    quokka:`<circle cx="36" cy="36" r="10" fill="${p.main}"/><circle cx="84" cy="36" r="10" fill="${p.main}"/>
+            <circle cx="36" cy="36" r="5" fill="${p.inner}"/><circle cx="84" cy="36" r="5" fill="${p.inner}"/>`
+  }[sp] || '';
+
+  /* ---- tails (behind the body) ---- */
+  const TAIL = {
+    cat: `<path d="M83 102 Q108 100 104 74" stroke="${p.main}" stroke-width="9" fill="none" stroke-linecap="round"/>`,
+    dog: `<path d="M83 100 Q100 96 98 80" stroke="${p.main}" stroke-width="9" fill="none" stroke-linecap="round"/>`,
+    bunny:`<circle cx="88" cy="106" r="10" fill="${p.light}"/>`,
+    dragon:`<path d="M83 104 Q110 102 104 76" stroke="${p.main}" stroke-width="9" fill="none" stroke-linecap="round"/>
+            <path d="M104 74 L112 78 L102 84 Z" fill="${p.dark}"/>`,
+    bilby:`<path d="M83 102 Q106 98 102 76" stroke="${p.main}" stroke-width="8" fill="none" stroke-linecap="round"/>
+           <path d="M102 82 Q105 74 102 70" stroke="#3A322B" stroke-width="7" fill="none" stroke-linecap="round"/>`,
+    quokka:`<path d="M84 104 Q104 104 102 86" stroke="${p.dark}" stroke-width="8" fill="none" stroke-linecap="round"/>`
+  }[sp] || '';
+
+  /* ---- face extras ---- */
+  const FACE = {
+    cat: `<path d="M22 60 L38 62 M22 68 L38 67" stroke="${p.dark}" stroke-width="1.4" stroke-linecap="round"/>
+          <path d="M98 60 L82 62 M98 68 L82 67" stroke="${p.dark}" stroke-width="1.4" stroke-linecap="round"/>`,
+    dragon:`<ellipse cx="20" cy="94" rx="10" ry="13" fill="${p.inner}" transform="rotate(-20 20 94)"/>
+            <ellipse cx="100" cy="94" rx="10" ry="13" fill="${p.inner}" transform="rotate(20 100 94)"/>`,
+    quokka:`<path d="M48 70 Q60 82 72 70" stroke="${p.nose}" stroke-width="2.4" fill="none" stroke-linecap="round"/>`
+  }[sp] || '';
+
+  const mouth = sp==='quokka' ? '' :
+    `<path d="M54 70 Q60 75 66 70" stroke="${p.nose}" stroke-width="1.8" fill="none" stroke-linecap="round"/>`;
+
+  return `<svg class="${cls||''}" width="${132*scale}" height="${132*scale}" viewBox="0 0 120 132">
+    <ellipse cx="60" cy="126" rx="30" ry="5" fill="#000" opacity=".07"/>
+    ${sp==='dragon'?FACE:''}
+    ${TAIL}
+    <ellipse cx="60" cy="98" rx="24" ry="22" fill="${p.main}"/>
+    <ellipse cx="60" cy="103" rx="15" ry="15" fill="${p.light}"/>
+    <ellipse cx="37" cy="98" rx="7" ry="9" fill="${p.main}"/>
+    <ellipse cx="83" cy="98" rx="7" ry="9" fill="${p.main}"/>
+    <ellipse cx="49" cy="118" rx="9" ry="5.5" fill="${p.main}"/>
+    <ellipse cx="71" cy="118" rx="9" ry="5.5" fill="${p.main}"/>
+    ${scf}
+    ${EARS}
+    <circle cx="60" cy="56" r="30" fill="${p.main}"/>
+    <ellipse cx="60" cy="66" rx="16" ry="11" fill="${p.light}"/>
+    ${sp!=='dragon'?FACE:''}
+    <ellipse cx="47" cy="53" rx="5.5" ry="6.8" fill="#2B2B2B"/>
+    <ellipse cx="73" cy="53" rx="5.5" ry="6.8" fill="#2B2B2B"/>
+    <circle cx="45" cy="50" r="2.3" fill="#fff"/><circle cx="71" cy="50" r="2.3" fill="#fff"/>
+    <circle cx="49" cy="56" r="1.1" fill="#fff" opacity=".7"/><circle cx="75" cy="56" r="1.1" fill="#fff" opacity=".7"/>
+    <ellipse cx="34" cy="64" rx="6" ry="3.4" fill="#F2A0A0" opacity=".45"/>
+    <ellipse cx="86" cy="64" rx="6" ry="3.4" fill="#F2A0A0" opacity=".45"/>
+    <path d="M56 61 L64 61 L60 66 Z" fill="${p.nose}"/>
+    ${mouth}
+    ${hat}
+  </svg>`;
+}
+
+/* ================= helpers ================= */
+const $ = id => document.getElementById(id);
+const stage = () => STAGES.slice().reverse().find(s=>S.xp>=s.min);
+const nextStage = () => STAGES.find(s=>s.min>S.xp);
+const toast=(w,m)=>{const el=$(w==='kid'?'kidToast':'parToast');el.textContent=m;el.classList.add('show');setTimeout(()=>el.classList.remove('show'),2300);};
+const setTabs = show => $('kidTabs').classList.toggle('hide', !show);
+
+/* ================= CHILD ================= */
+function renderKid(){
+  const sc = $('kidScreen');
+
+  /* --- onboarding: choose animal --- */
+  if (S.onboard === 'animal'){
+    setTabs(false);
+    sc.innerHTML = `<div class="ob">
+      <h3>Who's your buddy?</h3>
+      <p>Pick your animal. You can change this any time —<br>nothing you choose is ever lost.</p>
+      <div class="animals">
+        ${Object.entries(ANIMALS).map(([k,a])=>`
+          <div class="acard ${S.species===k?'sel':''}" data-sp="${k}">
+            ${petSVG(k,.62,null,'')}
+            <b>${a.name}</b><small>${a.blurb}</small>
+          </div>`).join('')}
+      </div>
+      <button class="bigbtn" id="obNext" ${S.species?'':'disabled'}>Choose ${S.species?ANIMALS[S.species].name:'…'} →</button>
+    </div>`;
+    sc.querySelectorAll('[data-sp]').forEach(el=>el.onclick=()=>{S.species=el.dataset.sp;renderKid();});
+    $('obNext').onclick=()=>{S.onboard='name';renderKid();};
+    return;
+  }
+
+  /* --- onboarding: name it --- */
+  if (S.onboard === 'name'){
+    setTabs(false);
+    const a = ANIMALS[S.species];
+    sc.innerHTML = `<div class="ob">
+      <span class="back" id="obBack">← Pick a different animal</span>
+      ${petSVG(S.species,.95,null,'bounce')}
+      <h3 style="margin-top:6px">What's their name?</h3>
+      <p>You choose. Only you and your grown-up<br>will ever see it.</p>
+      <input class="nameinput" id="nm" maxlength="14" placeholder="Type a name…" value="${S.petName}">
+      <div class="chips">${a.names.map(n=>`<span class="chip" data-n="${n}">${n}</span>`).join('')}</div>
+      <button class="bigbtn" id="obDone" ${S.petName.trim()?'':'disabled'}>That's the one ✓</button>
+    </div>`;
+    const nm = $('nm');
+    nm.oninput = () => { S.petName = nm.value; $('obDone').disabled = !nm.value.trim(); };
+    sc.querySelectorAll('[data-n]').forEach(el=>el.onclick=()=>{S.petName=el.dataset.n;renderKid();setTimeout(()=>$('nm')&&$('nm').focus(),0);});
+    $('obBack').onclick=()=>{S.onboard='animal';renderKid();};
+    $('obDone').onclick=()=>{
+      S.petName = S.petName.trim() || ANIMALS[S.species].names[0];
+      S.onboard='done'; renderKid(); renderParent();
+      toast('kid', `${S.petName} the ${ANIMALS[S.species].name.toLowerCase()} moved in! 💚`);
+    };
+    return;
+  }
+
+  setTabs(true);
+  if (S.view==='task') return renderRunner();
+
+  const st = stage(), nx = nextStage();
+  const pct = nx ? Math.min(100, Math.round(((S.xp-st.min)/(nx.min-st.min))*100)) : 100;
+
+  if (S.kidTab==='home'){
+    const todo=S.tasks.filter(t=>t.status==='todo'), pend=S.tasks.filter(t=>t.status==='pending'), done=S.tasks.filter(t=>t.status==='done');
+    sc.innerHTML = `
+      <div class="h-row"><div class="hi">G'day, Milla 👋</div><div class="coins">🪙 ${S.coins}</div></div>
+      <div class="petcard">
+        ${petSVG(S.species, st.scale, S.wearing, 'bounce')}
+        <div class="petname">${S.petName} the ${ANIMALS[S.species].name}</div>
+        <div class="petstage">Stage ${STAGES.indexOf(st)+1} of 4 · ${st.n}</div>
+        <div class="xpwrap"><div class="xpbar" style="width:${pct}%"></div></div>
+        <div class="xplabel"><span>${st.n}</span><span>${nx?nx.n+' at '+nx.min+' XP':'Fully grown 🎉'}</span></div>
+      </div>
+      <div class="sect">Today · ${done.length}/${S.tasks.length} done</div>
+      ${[...todo,...pend,...done].map(taskRow).join('')}
+      ${S.tasks.length===0?`<div class="empty">No tasks yet.<br>Your grown-up will add some. 🌱</div>`:''}
+      ${todo.length===0&&pend.length===0&&S.tasks.length?`<div class="empty">All done for today.<br>${S.petName} is proud of you. 💚</div>`:''}`;
+    sc.querySelectorAll('[data-task]').forEach(el=>el.onclick=()=>{
+      const t=S.tasks.find(x=>x.id==el.dataset.task); if(t.status!=='todo')return;
+      S.view='task';S.step=0;S.active=t.id;t.secs=0;
+      clearInterval(tick);tick=setInterval(()=>t.secs++,1000);renderKid();
+    });
+  }
+
+  if (S.kidTab==='care'){
+    const food=S.owned.map(i=>SHOP.find(s=>s.id===i)).filter(i=>i&&i.type==='food');
+    const wear=S.owned.map(i=>SHOP.find(s=>s.id===i)).filter(i=>i&&i.type==='wear');
+    sc.innerHTML=`
+      <div class="h-row"><div class="hi">Care for ${S.petName}</div><div class="coins">🪙 ${S.coins}</div></div>
+      <div class="petcard">${petSVG(S.species,st.scale,S.wearing,'bounce')}
+        <div class="petname">${S.petName} is happy</div>
+        <div class="petstage">${S.petName} never gets sick or sad. They just grow when you care for them.</div></div>
+      <div class="sect">Feed</div>
+      ${food.length?`<div class="grid">${food.map(f=>`<div class="item" data-feed="${f.id}"><span class="e">${f.e}</span><b>${f.name}</b><small>+${f.xp} XP</small></div>`).join('')}</div>`
+        :`<div class="empty">No food yet.<br>Earn coins, then visit the Shop 🎒</div>`}
+      <div class="sect">Dress up</div>
+      <div class="grid">${wear.length?wear.map(w=>`<div class="item" data-wear="${w.id}"><span class="e">${w.e}</span><b>${w.name}</b><small>${S.wearing===w.id?'Wearing':'Put on'}</small></div>`).join('')
+        :`<div class="empty" style="grid-column:1/-1">Nothing to wear yet.</div>`}</div>`;
+    sc.querySelectorAll('[data-feed]').forEach(el=>el.onclick=()=>{
+      const f=SHOP.find(s=>s.id===el.dataset.feed);
+      S.owned.splice(S.owned.indexOf(f.id),1);
+      const before=stage().n; S.xp+=f.xp;
+      toast('kid',`${S.petName} ate the ${f.name.toLowerCase()} · +${f.xp} XP`);
+      if(stage().n!==before) setTimeout(()=>toast('kid',`🎉 ${S.petName} grew into a ${stage().n}!`),2400);
+      renderKid();
+    });
+    sc.querySelectorAll('[data-wear]').forEach(el=>el.onclick=()=>{S.wearing=S.wearing===el.dataset.wear?null:el.dataset.wear;renderKid();});
+  }
+
+  if (S.kidTab==='shop'){
+    sc.innerHTML=`
+      <div class="h-row"><div class="hi">Shop</div><div class="coins">🪙 ${S.coins}</div></div>
+      <div class="sect">Spend the coins you earned</div>
+      <div class="grid">${SHOP.map(i=>{const o=S.owned.includes(i.id)||S.room.includes(i.id);
+        return `<div class="item ${o?'owned':''}" ${o?'':`data-buy="${i.id}"`}><span class="e">${i.e}</span><b>${i.name}</b><small>${o?'Owned':'🪙 '+i.cost}</small></div>`;}).join('')}</div>
+      <div class="empty" style="margin-top:10px">No loot boxes. No surprise packs.<br>Every price is readable.</div>`;
+    sc.querySelectorAll('[data-buy]').forEach(el=>el.onclick=()=>{
+      const i=SHOP.find(s=>s.id===el.dataset.buy);
+      if(S.coins<i.cost){toast('kid',`You need ${i.cost-S.coins} more coins. Try a task! 💪`);return;}
+      S.coins-=i.cost;(i.type==='room'?S.room:S.owned).push(i.id);
+      toast('kid',i.type==='room'?`${i.name} added to the den`:`${i.name} added to your bag`);renderKid();
+    });
+  }
+
+  if (S.kidTab==='room'){
+    const items=S.room.map(i=>SHOP.find(s=>s.id===i));
+    sc.innerHTML=`
+      <div class="h-row"><div class="hi">${S.petName}'s den</div><div class="coins">🪙 ${S.coins}</div></div>
+      <div class="petcard" style="padding-top:20px">
+        <div style="font-size:34px;letter-spacing:6px">${items.map(i=>i.e).join('')||'·'}</div>
+        ${petSVG(S.species,st.scale,S.wearing,'bounce')}
+        <div class="petname">${items.length?'Cosy!':'A bit empty in here'}</div>
+        <div class="petstage">${items.length?items.map(i=>i.name).join(' · '):'Buy den items in the Shop'}</div></div>
+      <div class="empty">The den is private. Nobody else can see it,<br>and there are no leaderboards.</div>`;
+  }
+  syncTabs();
+}
+
+function taskRow(t){
+  const b = t.status==='pending' ? `<span class="badge b-wait">waiting</span>`
+          : t.status==='done'    ? `<span class="badge b-done">${t.partial?'partly':'done'}</span>`
+          : `<span class="pts">+${t.pts}</span>`;
+  return `<div class="task ${t.status}" data-task="${t.id}"><div class="ic">${t.icon}</div>
+    <div class="t"><b>${t.title}</b><small>${t.steps.length} step${t.steps.length===1?'':'s'} · ${t.status==='pending'?'sent to grown-up':'tap to start'}</small></div>${b}</div>`;
+}
+
+function renderRunner(){
+  const t=S.tasks.find(x=>x.id===S.active), st=t.steps[S.step], last=S.step===t.steps.length-1;
+  $('kidScreen').innerHTML=`<div class="runner">
+    <span class="back" id="bk">← Not now</span>
+    <div style="font-weight:800;font-size:15px">${t.icon} ${t.title}</div>
+    <div class="steps">${t.steps.map((_,i)=>`<span class="dot ${i===S.step?'on':''}"></span>`).join('')}</div>
+    <div class="stepcard"><div class="stepimg">${st.e}</div><div class="steptxt">${st.t}</div>
+      <div class="timer">⏱ No rush — take your time</div></div>
+    <button class="bigbtn" id="nx">${last?'All done ✓':'Done — next step'}</button>
+    <button class="ghostbtn" id="hp">🙋 I need help</button>
+    ${S.step>0?`<button class="ghostbtn" id="pt">I did some of it — send anyway</button>`:''}
+    <div class="helpnote">Help taps are never a fail. They tell your grown-up what to make easier.</div></div>`;
+  $('bk').onclick=()=>{clearInterval(tick);S.view=null;renderKid();};
+  $('hp').onclick=()=>{t.help++;toast('kid',`${S.petName} says: it's okay to ask. Your grown-up will see this. 💚`);};
+  if($('pt'))$('pt').onclick=()=>submit(t,true);
+  $('nx').onclick=()=>last?submit(t,false):(S.step++,renderRunner());
+}
+function submit(t,partial){
+  clearInterval(tick);
+  t.status='pending';t.partial=partial;t.stepsDone=S.step+(partial?0:1);S.view=null;
+  toast('kid',partial?'Sent! You did some of it — that counts. 👍':'Sent to your grown-up for a tick ✓');
+  renderKid();renderParent();toast('par',`New approval waiting: ${t.title}`);
+}
+
+/* ================= PARENT ================= */
+function renderParent(){
+  const sc=$('parScreen');
+  const pend=S.tasks.filter(t=>t.status==='pending'), done=S.tasks.filter(t=>t.status==='done');
+  const petLabel = S.onboard==='done' ? `${S.petName} the ${ANIMALS[S.species].name}` : 'not chosen yet';
+
+  if (S.parTab==='dash'){
+    sc.innerHTML=`
+      <div class="h-row"><div class="hi">Today</div><div style="font-size:12px;color:var(--muted)">Mon 13 Jul</div></div>
+      <div class="kpi">
+        <div><b>${done.length}/${S.tasks.length}</b><small>Tasks done</small></div>
+        <div><b>${pend.length}</b><small>Awaiting you</small></div>
+        <div><b>${S.tasks.reduce((a,t)=>a+t.help,0)}</b><small>Help taps</small></div>
+        <div><b>${S.xp}</b><small>Pet XP</small></div>
+      </div>
+      <div class="pcard"><h3>Milla · 7</h3>
+        <p>Buddy: <b>${petLabel}</b> — chosen and named by Milla.</p>
+        <p style="margin-top:6px">${pend.length?`<b style="color:var(--amber)">${pend.length} task(s) waiting for your tick.</b> Nothing is awarded until you approve.`:'Nothing waiting. You have not had to nag today.'}</p></div>
+      <div class="sect">Streak</div>
+      <div class="pcard"><p style="font-size:22px;letter-spacing:3px">💚 💚 💚 💚 ⚪ ⚪ ⚪</p>
+        <p style="margin-top:6px">4 of the last 7 days. A missed day never breaks anything — no streak is ever lost.</p></div>
+      <div class="otbox"><b>Design rule:</b> the parent is the only source of truth. The child app can never self-award coins.</div>`;
+  }
+
+  if (S.parTab==='approve'){
+    sc.innerHTML=`
+      <div class="h-row"><div class="hi">Approvals</div><div style="font-size:12px;color:var(--muted)">${pend.length} waiting</div></div>
+      ${pend.length?pend.map(t=>`<div class="pcard"><h3>${t.icon} ${t.title}</h3>
+        <p>${t.stepsDone}/${t.steps.length} steps · ${t.secs}s on task · ${t.help} help tap${t.help===1?'':'s'}${t.partial?' · child flagged “partly done”':''}</p>
+        <div class="approve" data-id="${t.id}">
+          <button class="yes" data-a="full">Approve +${t.pts} 🪙</button>
+          <button class="part" data-a="part">Partly +${Math.ceil(t.pts/2)} 🪙</button>
+          <button class="no" data-a="skip">Not today</button></div></div>`).join('')
+      :`<div class="empty">Nothing to approve.<br><br>On the child app: tap a task → step through → <b>All done</b>.</div>`}
+      <div class="otbox"><b>“Not today” is not a punishment.</b> It awards nothing, removes nothing, and logs a <code>skip_reason</code> for the OT.</div>`;
+    sc.querySelectorAll('.approve button').forEach(b=>b.onclick=()=>{
+      const t=S.tasks.find(x=>x.id==b.parentElement.dataset.id), a=b.dataset.a;
+      t.status='done';
+      if(a==='full'){S.coins+=t.pts;t.partial=false;toast('kid',`Mum approved “${t.title}” · +${t.pts} coins 🪙`);}
+      if(a==='part'){const h=Math.ceil(t.pts/2);S.coins+=h;t.partial=true;toast('kid',`Nice try! +${h} coins 🪙`);}
+      if(a==='skip'){t.skipped=true;toast('kid',`No worries — we'll try “${t.title}” tomorrow 💚`);}
+      renderParent();renderKid();
+    });
+  }
+
+  /* ---------- TASKS: builder + coin editor ---------- */
+  if (S.parTab==='build'){
+    if (draft) return renderBuilder();
+    sc.innerHTML=`
+      <div class="h-row"><div class="hi">Tasks</div></div>
+      <button class="bigbtn" id="newT">＋ New task</button>
+      <div class="sect">Current tasks · tap ± to change coins</div>
+      <div class="pcard">
+        ${S.tasks.length?S.tasks.map(t=>`<div class="editrow">
+            <span style="font-size:15px">${t.icon}</span><b>${t.title}</b>
+            <button class="mini" data-dec="${t.id}">−</button>
+            <span class="v">${t.pts} 🪙</span>
+            <button class="mini" data-inc="${t.id}">+</button>
+            <button class="rm" data-rm="${t.id}">✕</button>
+          </div>`).join(''):`<p>No tasks yet.</p>`}
+      </div>
+      <div class="sect">Start from a template</div>
+      ${TEMPLATES.map(t=>`<div class="tmpl"><b>${t.n}</b><small>${t.s} · ${t.c} tasks · ~2 min to set up</small></div>`).join('')}
+      <div class="otbox"><b>Coin values are the parent's dial, not ours.</b> Range 1–20. Families calibrate effort themselves — an ADHD child's "brush teeth" may be worth more than a sibling's.</div>`;
+    $('newT').onclick=()=>{draft={title:'',icon:'🪥',pts:5,prompt:'partial',steps:[{e:'✅',t:''}]};renderParent();};
+    sc.querySelectorAll('[data-inc]').forEach(b=>b.onclick=()=>{const t=S.tasks.find(x=>x.id==b.dataset.inc);t.pts=Math.min(20,t.pts+1);renderParent();renderKid();});
+    sc.querySelectorAll('[data-dec]').forEach(b=>b.onclick=()=>{const t=S.tasks.find(x=>x.id==b.dataset.dec);t.pts=Math.max(1,t.pts-1);renderParent();renderKid();});
+    sc.querySelectorAll('[data-rm]').forEach(b=>b.onclick=()=>{S.tasks=S.tasks.filter(x=>x.id!=b.dataset.rm);renderParent();renderKid();toast('par','Task removed');});
+  }
+
+  if (S.parTab==='insight'){
+    const help=S.tasks.reduce((a,t)=>a+t.help,0);
+    const timed=S.tasks.filter(t=>t.secs>0);
+    const avg=timed.length?Math.round(timed.reduce((a,t)=>a+t.secs,0)/timed.length):0;
+    sc.innerHTML=`
+      <div class="h-row"><div class="hi">Insights</div><div style="font-size:12px;color:var(--muted)">Last 7 days</div></div>
+      <div class="pcard"><h3>Captured on every task attempt</h3>
+        <div class="datarow"><span>prompt_level</span><span>full · partial · none</span></div>
+        <div class="datarow"><span>help_requested</span><span>${help}</span></div>
+        <div class="datarow"><span>time_on_task_sec</span><span>${avg}s avg</span></div>
+        <div class="datarow"><span>steps_completed / total</span><span>${done.length}/${S.tasks.length} tasks</span></div>
+        <div class="datarow"><span>skip_reason</span><span>${S.tasks.filter(t=>t.skipped).length} logged</span></div>
+        <div class="datarow"><span>coin_value (parent-set)</span><span>captured per task</span></div>
+        <div class="datarow"><span>independence_score</span><span>derived</span></div>
+      </div>
+      <div class="pcard"><h3>Hardest step this week</h3>
+        <p><b>“Small circles, bottom teeth”</b> — 3 help taps across 5 attempts. Suggest splitting into two steps or adding a video model.</p></div>
+      <button class="bigbtn" onclick="alert('Generates a 1-page PDF the parent can hand to their OT.\\n\\nNo diagnosis. No clinical claim. Just observed home data.')">Share with our OT →</button>
+      <div class="otbox"><b>This is the moat.</b> A consumer chore app can copy the pet in a sprint. It cannot retro-fit this data model, and it cannot get into an Australian NDIS plan.</div>`;
+  }
+  syncTabs();
+}
+
+function renderBuilder(){
+  const d = draft;
+  $('parScreen').innerHTML = `
+    <span class="back" id="cx">← Cancel</span>
+    <div class="hi" style="margin-bottom:12px">New task</div>
+    <div class="fld"><label>Task name</label><input type="text" id="ti" value="${d.title}" placeholder="e.g. Feed the dog"></div>
+    <div class="fld"><label>Icon</label><div class="iconpick" id="ip">
+      ${ICONS.map(i=>`<span class="${d.icon===i?'sel':''}" data-i="${i}">${i}</span>`).join('')}</div></div>
+    <div class="fld"><label>Coin value — you decide what it's worth</label>
+      <div class="stepper"><button id="pm">−</button><b>${d.pts} 🪙</b><button id="pp">＋</button>
+        <span style="font-size:11px;color:var(--muted)">1–20</span></div></div>
+    <div class="fld"><label>Prompt level (for your OT)</label><div class="seg" id="pl">
+      ${['full','partial','none'].map(p=>`<button class="${d.prompt===p?'on':''}" data-p="${p}">${p}</button>`).join('')}</div></div>
+    <div class="fld"><label>Visual steps (1–6)</label>
+      ${d.steps.map((s,i)=>`<div class="steprow">
+        <input class="em" data-se="${i}" value="${s.e}" maxlength="2">
+        <input data-st="${i}" value="${s.t}" placeholder="Step ${i+1} — short and concrete">
+        ${d.steps.length>1?`<button class="del" data-sd="${i}">✕</button>`:''}</div>`).join('')}
+      ${d.steps.length<6?`<button class="addstep" id="as">＋ Add step</button>`:''}
+    </div>
+    <button class="bigbtn" id="sv" ${d.title.trim()&&d.steps.every(s=>s.t.trim())?'':'disabled'}>Save &amp; send to Milla</button>
+    <div class="otbox">Steps must be short enough to read out loud in one breath. Six words is the target.</div>`;
+
+  const ti=$('ti');
+  ti.oninput=()=>{d.title=ti.value;$('sv').disabled=!(d.title.trim()&&d.steps.every(s=>s.t.trim()));};
+  document.querySelectorAll('#ip span').forEach(s=>s.onclick=()=>{d.icon=s.dataset.i;renderBuilder();});
+  $('pm').onclick=()=>{d.pts=Math.max(1,d.pts-1);renderBuilder();};
+  $('pp').onclick=()=>{d.pts=Math.min(20,d.pts+1);renderBuilder();};
+  document.querySelectorAll('#pl button').forEach(b=>b.onclick=()=>{d.prompt=b.dataset.p;renderBuilder();});
+  document.querySelectorAll('[data-st]').forEach(inp=>inp.oninput=()=>{d.steps[inp.dataset.st].t=inp.value;$('sv').disabled=!(d.title.trim()&&d.steps.every(s=>s.t.trim()));});
+  document.querySelectorAll('[data-se]').forEach(inp=>inp.oninput=()=>{d.steps[inp.dataset.se].e=inp.value;});
+  document.querySelectorAll('[data-sd]').forEach(b=>b.onclick=()=>{d.steps.splice(b.dataset.sd,1);renderBuilder();});
+  if($('as'))$('as').onclick=()=>{d.steps.push({e:'✅',t:''});renderBuilder();};
+  $('cx').onclick=()=>{draft=null;renderParent();};
+  $('sv').onclick=()=>{
+    S.tasks.push({id:S.nextId++,icon:d.icon,title:d.title.trim(),pts:d.pts,prompt:d.prompt,
+      status:'todo',help:0,secs:0,partial:false,steps:d.steps.map(s=>({e:s.e||'✅',t:s.t.trim()}))});
+    toast('par',`“${d.title.trim()}” sent to Milla · ${d.pts} coins`);
+    draft=null;renderParent();renderKid();
+    toast('kid',`New task from Mum: ${d.title.trim()} 🌱`);
+  };
+}
+
+/* ================= shell ================= */
+function syncTabs(){
+  document.querySelectorAll('#kidTabs button').forEach(b=>b.classList.toggle('on',b.dataset.t===S.kidTab));
+  document.querySelectorAll('#parTabs button').forEach(b=>b.classList.toggle('on',b.dataset.t===S.parTab));
+}
+document.querySelectorAll('#kidTabs button').forEach(b=>b.onclick=()=>{S.kidTab=b.dataset.t;S.view=null;clearInterval(tick);renderKid();});
+document.querySelectorAll('#parTabs button').forEach(b=>b.onclick=()=>{S.parTab=b.dataset.t;draft=null;renderParent();});
+$('lsBtn').onclick=()=>{S.lowStim=!S.lowStim;document.body.classList.toggle('lowstim',S.lowStim);
+  $('lsBtn').textContent=`🔅 Low-stimulation mode: ${S.lowStim?'ON':'OFF'}`;$('lsBtn').classList.toggle('on',!S.lowStim);};
+$('resetBtn').onclick=()=>{clearInterval(tick);S=seed();draft=null;document.body.classList.remove('lowstim');
+  $('lsBtn').textContent='🔅 Low-stimulation mode: OFF';$('lsBtn').classList.add('on');renderKid();renderParent();};
+
+renderKid();renderParent();
+</script>
+</body>
+</html>
